@@ -2,94 +2,94 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Rook : Chessman
+public class Rook : ChessMan
 {
     public override bool[,] PossibleMove()
     {
         bool[,] r = new bool[8, 8];
-        Chessman c;
+        ChessMan c;
         int i;
 
         // Hacia la derecha
-        i = (int)(CurrentX * 10);
+        i = CurrentX;
         while (true)
         {
             i++;
             if (i >= 8)
                 break;
-            c = BoardManager.Instance.Chessmans[i, (int)(CurrentY * 10)];
-            if (c == null)
+            c = BoardManager.Instance.Chessmans[i, CurretnY];
+            if(c == null)
             {
-                r[i, (int)(CurrentY * 10)] = true;
+                r[i, CurretnY] = true;
             }
             else
             {
-                if (c.isWhite != isWhite)
+                if(c.isWhite != isWhite)
                 {
-                    r[i, (int)(CurrentY * 10)] = true;
+                    r[i, CurretnY] = true;
                 }
                 break;
             }
         }
         // Hacia la izquierda
-        i = (int)(CurrentX * 10);
+        i = CurrentX;
         while (true)
         {
             i--;
             if (i < 0)
                 break;
-            c = BoardManager.Instance.Chessmans[i, (int)(CurrentY * 10)];
+            c = BoardManager.Instance.Chessmans[i, CurretnY];
             if (c == null)
             {
-                r[i, (int)(CurrentY * 10)] = true;
+                r[i, CurretnY] = true;
             }
             else
             {
                 if (c.isWhite != isWhite)
                 {
-                    r[i, (int)(CurrentY * 10)] = true;
+                    r[i, CurretnY] = true;
                 }
                 break;
             }
         }
         // Hacia arriba
-        i = (int)(CurrentY * 10);
+        i = CurretnY;
         while (true)
         {
             i++;
             if (i >= 8)
                 break;
-            c = BoardManager.Instance.Chessmans[(int)(CurrentX * 10), i];
+            c = BoardManager.Instance.Chessmans[CurrentX, i];
             if (c == null)
             {
-                r[(int)(CurrentX * 10), i] = true;
+                r[CurrentX, i] = true;
             }
             else
             {
                 if (c.isWhite != isWhite)
                 {
-                    r[(int)(CurrentX * 10), i] = true;
+                    r[CurrentX, i] = true;
                 }
                 break;
             }
         }
         // Hacia abajo
-        i = (int)(CurrentY * 10);
+        i = CurretnY;
         while (true)
         {
             i--;
             if (i < 0)
                 break;
-            c = BoardManager.Instance.Chessmans[(int)(CurrentX * 10), i];
+            c = BoardManager.Instance.Chessmans[CurrentX, i];
             if (c == null)
             {
-                r[(int)(CurrentX * 10), i] = true;
+                r[CurrentX, i] = true;
             }
             else
             {
                 if (c.isWhite != isWhite)
                 {
-                    r[(int)(CurrentX * 10), i] = true;
+                    r[CurrentX, i] = true;
                 }
                 break;
             }

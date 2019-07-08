@@ -2,108 +2,118 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-
-
-public class Pawn : Chessman
+public class Pawn : ChessMan
 {
-    bool[,] global = new bool[8,8];    
     public override bool[,] PossibleMove()
     {
         bool[,] r = new bool[8, 8];
-        Chessman c, c2;
-        //Debug.Log(CurrentX + "y el y" + CurrentY);
-        //White team nmove
+        ChessMan c, c2;
+        int[] e = BoardManager.Instance.EnPassantMove;
+
+        // Movimiento de las blancas
         if (isWhite)
         {
-            //Diagonal Left
-            if ((int)(CurrentX*10) != 0 && (int)(CurrentY*10) != 7)
+            // Movimiento Diagonal Izquierda
+            if(CurrentX != 0 && CurretnY != 7)
             {
-                c = BoardManager.Instance.Chessmans[(int)((CurrentX - 0.1f)*10),(int)( (CurrentY + 0.1f)*10)];
-                if (c!= null && !c.isWhite)
+                if(e[0] == CurrentX -1 && e[1] == CurretnY + 1)
                 {
-                    r[(int)((CurrentX - 0.1f)*10), (int)((CurrentY + 0.1f)*10)] = true;
+                    r[CurrentX - 1, CurretnY + 1] = true;
+                }
+                c = BoardManager.Instance.Chessmans[CurrentX - 1, CurretnY + 1];
+                if(c!= null && !c.isWhite)
+                {
+                    r[CurrentX - 1, CurretnY + 1] = true;
                 }
             }
-            //Diagonal Right
-            if ((int)(CurrentX * 10) != 7 && (int)(CurrentY * 10) != 7)
+            // Movimiento Diagonal Derecha
+            if (CurrentX != 7 && CurretnY != 7)
             {
-                c = BoardManager.Instance.Chessmans[(int)(CurrentX - 0.1f), (int)(CurrentY + 0.1f)];
+                if (e[0] == CurrentX + 1 && e[1] == CurretnY + 1)
+                {
+                    r[CurrentX + 1, CurretnY + 1] = true;
+                }
+
+                c = BoardManager.Instance.Chessmans[CurrentX + 1, CurretnY + 1];
                 if (c != null && !c.isWhite)
                 {
-                    r[(int)(CurrentX + 0.1f), (int)(CurrentY + 0.1f)] = true;
+                    r[CurrentX + 1, CurretnY + 1] = true;
                 }
             }
-            //Middle
-            if ((int)(CurrentY*10) != 7 )
+            // Movimiento Al Medio
+            if(CurretnY != 7)
             {
-                c = BoardManager.Instance.Chessmans[(int)(CurrentX*10),(int)( CurrentY*10) + 1];
-                if (c == null)
+                c = BoardManager.Instance.Chessmans[CurrentX, CurretnY + 1];
+                if(c == null)
                 {
-                    r[(int)(CurrentX*10), (int)(CurrentY*10) + 1] = true;
+                    r[CurrentX, CurretnY + 1] = true;
                 }
             }
-            //Middle en first move
-            //Debug.Log((int)(CurrentY * 10));
-            if ((int)(CurrentY*10) == 1)
+
+            // Movimiendo Doble Al Empezar
+            if(CurretnY == 1)
             {
-                c = BoardManager.Instance.Chessmans[(int)(CurrentX*10), (int)(CurrentY*10) + 1];
-                c2 = BoardManager.Instance.Chessmans[(int)(CurrentX*10), (int)(CurrentY*10) + 2];
-                if(c == null & c2 == null)
+                c = BoardManager.Instance.Chessmans[CurrentX, CurretnY + 1];
+                c2 = BoardManager.Instance.Chessmans[CurrentX, CurretnY + 2];
+                if(c == null && c2 == null)
                 {
-                    r[(int)(CurrentX*10), (int)(CurrentY*10) + 2] = true;
-                }
-            }
-        }
-        else
-        {
-            //Diagonal Left
-            if (CurrentX != 0 && CurrentY != 0)
-            {
-                c = BoardManager.Instance.Chessmans[(int)(CurrentX - 0.1f), (int)(CurrentY - 0.1f)];
-                if (c != null && c.isWhite)
-                {
-                    r[(int)(CurrentX - 0.1f), (int)(CurrentY - 0.1f)] = true;
-                }
-            }
-            //Diagonal Right
-            if (CurrentX != 7 && CurrentY != 0)
-            {
-                c = BoardManager.Instance.Chessmans[(int)(CurrentX - 0.1f), (int)(CurrentY - 0.1f)];
-                if (c != null && c.isWhite)
-                {
-                    r[(int)(CurrentX + 0.1f), (int)(CurrentY - 0.1f)] = true;
-                }
-            }
-            //Middle
-            if (CurrentY != 0)
-            {
-                c = BoardManager.Instance.Chessmans[(int)(CurrentX), (int)(CurrentY - 0.1f)];
-                if (c == null)
-                {
-                    r[(int)(CurrentX), (int)(CurrentY - 1)] = true;
-                }
-            }
-            //Middle en first move
-            if (CurrentY == 6)
-            {
-                c = BoardManager.Instance.Chessmans[(int)CurrentX, (int)CurrentY - 1];
-                c2 = BoardManager.Instance.Chessmans[(int)CurrentX, (int)CurrentY - 2];
-                if (c == null & c2 == null)
-                {
-                    r[(int)(CurrentX*10.0f), (int)(CurrentY*10.0f) - 2] = true;
+                    r[CurrentX, CurretnY + 2] = true;
                 }
             }
         }
         //r[3, 3] = true;
+        // Movimiendo de las negras
+        else
+        {
+            // Movimiento Diagonal Izquierda
+            if (CurrentX != 0 && CurretnY != 0)
+            {
+                if (e[0] == CurrentX - 1 && e[1] == CurretnY - 1)
+                {
+                    r[CurrentX - 1, CurretnY - 1] = true;
+                }
+
+                c = BoardManager.Instance.Chessmans[CurrentX - 1, CurretnY - 1];
+                if (c != null && c.isWhite)
+                {
+                    r[CurrentX - 1, CurretnY - 1] = true;
+                }
+            }
+            // Movimiento Diagonal Derecha
+            if (CurrentX != 7 && CurretnY != 0)
+            {
+                if (e[0] == CurrentX + 1 && e[1] == CurretnY - 1)
+                {
+                    r[CurrentX + 1, CurretnY - 1] = true;
+                }
+
+                c = BoardManager.Instance.Chessmans[CurrentX + 1, CurretnY - 1];
+                if (c != null && c.isWhite)
+                {
+                    r[CurrentX + 1, CurretnY - 1] = true;
+                }
+            }
+            // Movimiento Al Medio
+            if (CurretnY != 0)
+            {
+                c = BoardManager.Instance.Chessmans[CurrentX, CurretnY - 1];
+                if (c == null)
+                {
+                    r[CurrentX, CurretnY - 1] = true;
+                }
+            }
+
+            // Movimiendo Doble Al Empezar
+            if (CurretnY == 6)
+            {
+                c = BoardManager.Instance.Chessmans[CurrentX, CurretnY - 1];
+                c2 = BoardManager.Instance.Chessmans[CurrentX, CurretnY - 2];
+                if (c == null && c2 == null)
+                {
+                    r[CurrentX, CurretnY - 2] = true;
+                }
+            }
+        }
         return r;
     }
-
-    public override void PosicionGrasped()
-    {
-        pieceGraspedX = (int)(this.transform.position.x * 10);
-        pieceGraspedY = (int)(this.transform.position.z * 10);
-        grasped = true;
-        Debug.Log("Se supone que aqui tiene eso " + grasped);
-    }
-
 }

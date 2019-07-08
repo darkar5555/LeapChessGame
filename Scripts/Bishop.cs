@@ -2,33 +2,33 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Bishop : Chessman
+public class Bishop : ChessMan
 {
     public override bool[,] PossibleMove()
     {
         bool[,] r = new bool[8, 8];
-        Chessman c;
+        ChessMan c;
         int i, j;
 
         // Arriba Izquierda
-        i = (int)(CurrentX*10.0f);
-        j = (int)(CurrentY*10.0f);
+        i = CurrentX;
+        j = CurretnY;
         while (true)
         {
             i--;
             j++;
-            if (i < 0 || j >= 8)
+            if(i < 0 || j >= 8)
             {
                 break;
             }
             c = BoardManager.Instance.Chessmans[i, j];
-            if (c == null)
+            if(c == null)
             {
                 r[i, j] = true;
             }
             else
             {
-                if (isWhite != c.isWhite)
+                if(isWhite != c.isWhite)
                 {
                     r[i, j] = true;
                 }
@@ -37,8 +37,8 @@ public class Bishop : Chessman
         }
 
         // Arriba Derecha
-        i = (int)(CurrentX * 10.0f);
-        j = (int)(CurrentY * 10.0f);
+        i = CurrentX;
+        j = CurretnY;
         while (true)
         {
             i++;
@@ -63,8 +63,8 @@ public class Bishop : Chessman
         }
 
         // Abajo Izquierda
-        i = (int)(CurrentX * 10.0f);
-        j = (int)(CurrentY * 10.0f);
+        i = CurrentX;
+        j = CurretnY;
         while (true)
         {
             i--;
@@ -89,8 +89,8 @@ public class Bishop : Chessman
         }
 
         // Abajo Derecha
-        i = (int)(CurrentX * 10.0f);
-        j = (int)(CurrentY * 10.0f);
+        i = CurrentX;
+        j = CurretnY;
         while (true)
         {
             i++;

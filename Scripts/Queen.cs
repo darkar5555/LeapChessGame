@@ -2,101 +2,101 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Queen : Chessman
+public class Queen : ChessMan
 {
     public override bool[,] PossibleMove()
     {
         bool[,] r = new bool[8, 8];
-        Chessman c;
+        ChessMan c;
         int i, j;
 
         // Hacia la derecha
-        i = (int)(CurrentX*10.0f);
+        i = CurrentX;
         while (true)
         {
             i++;
             if (i >= 8)
                 break;
-            c = BoardManager.Instance.Chessmans[i, (int)(CurrentY*10.0f)];
+            c = BoardManager.Instance.Chessmans[i, CurretnY];
             if (c == null)
             {
-                r[i, (int)(CurrentY * 10.0f)] = true;
+                r[i, CurretnY] = true;
             }
             else
             {
                 if (c.isWhite != isWhite)
                 {
-                    r[i, (int)(CurrentY * 10.0f)] = true;
+                    r[i, CurretnY] = true;
                 }
                 break;
             }
         }
         // Hacia la izquierda
-        i = (int)(CurrentX * 10.0f);
+        i = CurrentX;
         while (true)
         {
             i--;
             if (i < 0)
                 break;
-            c = BoardManager.Instance.Chessmans[i, (int)(CurrentY * 10.0f)];
+            c = BoardManager.Instance.Chessmans[i, CurretnY];
             if (c == null)
             {
-                r[i, (int)(CurrentY * 10.0f)] = true;
+                r[i, CurretnY] = true;
             }
             else
             {
                 if (c.isWhite != isWhite)
                 {
-                    r[i, (int)(CurrentY * 10.0f)] = true;
+                    r[i, CurretnY] = true;
                 }
                 break;
             }
         }
         // Hacia arriba
-        i = (int)(CurrentY * 10.0f);
+        i = CurretnY;
         while (true)
         {
             i++;
             if (i >= 8)
                 break;
-            c = BoardManager.Instance.Chessmans[(int)(CurrentX * 10.0f), i];
+            c = BoardManager.Instance.Chessmans[CurrentX, i];
             if (c == null)
             {
-                r[(int)(CurrentX * 10.0f), i] = true;
+                r[CurrentX, i] = true;
             }
             else
             {
                 if (c.isWhite != isWhite)
                 {
-                    r[(int)(CurrentX * 10.0f), i] = true;
+                    r[CurrentX, i] = true;
                 }
                 break;
             }
         }
         // Hacia abajo
-        i = (int)(CurrentY * 10.0f);
+        i = CurretnY;
         while (true)
         {
             i--;
             if (i < 0)
                 break;
-            c = BoardManager.Instance.Chessmans[(int)(CurrentX * 10.0f), i];
+            c = BoardManager.Instance.Chessmans[CurrentX, i];
             if (c == null)
             {
-                r[(int)(CurrentX * 10.0f), i] = true;
+                r[CurrentX, i] = true;
             }
             else
             {
                 if (c.isWhite != isWhite)
                 {
-                    r[(int)(CurrentX * 10.0f), i] = true;
+                    r[CurrentX, i] = true;
                 }
                 break;
             }
         }
         // Arriba Izquierda
-        i = (int)(CurrentX * 10.0f);
-        j = (int)(CurrentY * 10.0f);
+        i = CurrentX;
+        j = CurretnY;
         while (true)
         {
             i--;
@@ -121,8 +121,8 @@ public class Queen : Chessman
         }
 
         // Arriba Derecha
-        i = (int)(CurrentX * 10.0f);
-        j = (int)(CurrentY * 10.0f);
+        i = CurrentX;
+        j = CurretnY;
         while (true)
         {
             i++;
@@ -147,8 +147,8 @@ public class Queen : Chessman
         }
 
         // Abajo Izquierda
-        i = (int)(CurrentX * 10.0f);
-        j = (int)(CurrentY * 10.0f);
+        i = CurrentX;
+        j = CurretnY;
         while (true)
         {
             i--;
@@ -173,8 +173,8 @@ public class Queen : Chessman
         }
 
         // Abajo Derecha
-        i = (int)(CurrentX * 10.0f);
-        j = (int)(CurrentY * 10.0f);
+        i = CurrentX;
+        j = CurretnY;
         while (true)
         {
             i++;
@@ -199,4 +199,5 @@ public class Queen : Chessman
         }
         return r;
     }
+
 }

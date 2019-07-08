@@ -4,232 +4,129 @@ using UnityEngine;
 using System;
 using Leap;
 using Leap.Unity;
+
 public class BoardManager : MonoBehaviour
 {
-    // Start is called before the first frame update
     public static BoardManager Instance { set; get; }
     private bool[,] allowedMoves { set; get; }
-    public Chessman[,] Chessmans { set; get; }
-    private Chessman selectedChessman;
-    public Chessman selecionado;
+
+
+    public ChessMan[,] Chessmans { set; get; }
+    private ChessMan selectedChessman;
+
     private const float TILE_SIZE = 1.0f;
-    private const float TILE_OFFSET = 0.05f;
+    private const float TILE_OFFSET = 0.5f;
 
-    private float piecePositionX = -1;
-    private float piecePositionY = -1;
-
-    private float pieceLeftPositionX = -1;
-    private float pieceLeftPositionY = -1;
-
-    private float piecePositionWithoutX = -1;
-    private float piecePositionWithoutY = -1;
-    private bool grasped = false;
-
-    Controller controller;
-    Frame frame;
-    List<Hand> hands;
-
-
-    private float selectionX = -1.0f;
-    private float selectionY = -1.0f;
-
-    public GameObject mano;
-    public GameObject manoLeft;
+    private int selectionX = -1;
+    private int selectionY = -1;
 
     public List<GameObject> chessmanPrefabs;
-    public List<GameObject> activeChessman;
+    private List<GameObject> activeChessman;
+
+    private Material previousMat;
+    public Material selectedMat;
+
+    public int[] EnPassantMove { set; get; }
+
+    private Quaternion orientation = Quaternion.Euler(0, 180, 0);
 
     public bool isWhiteTurn = true;
 
-    //public List<GameObject> activeChessman { get => activeChessman; set => activeChessman = value; }
 
-    private void Start()
+
+
+    private float piecePositionX = -1;
+    public float piecePositionY = -1;
+    public float pieceLeftPositionX = -1;
+    public float pieceLeftPositionY = -1;
+    public int piecePositionWithoutX = -1;
+    public int piecePositionWithoutY = -1;
+    public bool grasped = false;
+    Controller controller;
+    Frame frame;
+    List<Hand> hands;
+    public GameObject mano;
+    public GameObject manoLeft;
+
+    // Start is called before the first frame update
+    void Start()
     {
         Instance = this;
         SpawnAllChessmans();
-
     }
 
     private void Update()
     {
         UpdateSelection();
-        DrawChessboard();
+        DrawChessBoard();
+
 
         controller = new Controller();
         Frame frame = controller.Frame();
         List<Hand> hands = frame.Hands;
         UpdateHand(hands);
         UpdateHandLeft(hands);
-        //selectedChessman = Chessmans[4, 1];
-        //sDebug.Log(selectedChessman);
-        //Debug.Log(hands[0].GrabAngle);
-        //Debug.Log("ahora que paso");
-        if ( Input.GetMouseButtonDown(0))
+
+
+
+        NetworkManager nM = NetworkManager.instance.GetComponent<NetworkManager>();
+        Reloj reloj = Reloj.instance.GetComponent<Reloj>();
+        RelojBalck relojBalck = RelojBalck.instance.GetComponent<RelojBalck>();
+        if (nM.secPawn.z == 1)
         {
-            Debug.Log("logre entrarn aqui");
-            if (piecePositionWithoutX >= 0.0f && piecePositionWithoutY >= 0.0f)
-            {
-
-                if (selectedChessman == null)
-                {
-                    Debug.Log("podemos mover");
-                    Debug.Log((int)(piecePositionWithoutX*10.0f) + " " + (int)(piecePositionWithoutY*10.0f));
-                    SelectChessman((int)(piecePositionWithoutX * 10.0f), (int)(piecePositionWithoutY * 10.0f));
-                    //SelectChessman((int)(piecePositionWithoutX * 10.0f), (int)(piecePositionWithoutY * 10.0f));
-                    selectedChessman.transform.position = mano.transform.position;
-                    Debug.Log(selectedChessman);
-                }
-                /*if(selectedChessman != null && hands[0].GrabAngle < 1.4f)
-                {
-                    MoveChessman(4, 4);
-                    Debug.Log("Entre en el else");
-                }*/
-                else
-                {
-                    // Mueve la ficha
-                    //MoveChessman((int)(piecePositionX * 10.0f), (int)(piecePositionY * 10.0f));
-                    MoveChessman(4, 4);
-                    Debug.Log("Entre en el else");
-                    //Debug.Log(selectedChessman.pieceGraspedX + "Por favor la posicion y " + selectedChessman.pieceGraspedY);
-
-                }
-            }
+            SelectChessman((int)nM.secPawn.x, (int)nM.secPawn.y);
+            //Debug.Log("entre aqui por favor");
+            nM.secPawn.z = 0;
+            reloj.estaPausado = false;
+            relojBalck.estaPausado = true;
         }
-        //if (hands[0].GrabAngle < 1.5 && Input.GetMouseButtonDown(0))
-        //{
-         //   MoveChessman(4, 4);
-          //  Debug.Log("moviendo el chessman");
-        //}
-        /*if (Input.GetMouseButtonDown(0))
+        if ( nM.movPawn.z == 1)
         {
-            if (selectionX >= 0.0f && selectionY >= 0.0f)
+            MoveChessman((int)nM.movPawn.x , (int)nM.movPawn.y);
+            nM.movPawn.z = 0;
+            reloj.estaPausado = true;
+            relojBalck.estaPausado = false;
+            nM.clockTurn.y = 0;
+        }
+        //Debug.Log("Posicion x " + piecePositionWithoutX + " " + "posicion Y " + piecePositionWithoutY);
+        //Debug.Log("El angulo de grab " + hands[0].GrabAngle);
+        if (selectedChessman == null && hands[0].GrabAngle > 2.5) 
+        {
+            SelectChessman(piecePositionWithoutX, piecePositionWithoutY);
+            nM.CommandSelectPawn(new Vector3(piecePositionWithoutX, piecePositionWithoutY, 1));
+        }
+        if (selectedChessman != null && Input.GetMouseButtonDown(0))
+        {
+            //SelectChessman(piecePositionWithoutX, piecePositionWithoutY);
+            nM.CommandMovePawn(new Vector3(pieceLeftPositionX, pieceLeftPositionY, 1));
+        }
+        Debug.Log(selectedChessman);
+        if (Input.GetMouseButtonDown(0))
+        {
+            if(selectionX >= 0 && selectionY >= 0)
             {
-
-                if (selectedChessman == null)
+                if(selectedChessman == null )
                 {
-                    // Selecciona una pieza
-                    //SelectChessman(piecePositionX, piecePositionY);
-                    //SelectChessmanHand();
-                    //Debug.Log("Este es el seleccionado " +selecionado);
-                    Debug.Log((int)(selectionX * 10.0f) + " " + (int)(selectionY * 10.0f));
-                    SelectChessman((int)(selectionX * 10.0f), (int)(selectionY * 10.0f));
-                    //Debug.Log()
-                    Debug.Log("podemos mover");
-                    //selectedChessman = Chessmans[4, 1];
-                    Debug.Log(selectedChessman);
-                    //Debug.Log(selectedChessman.pieceGraspedX + "Por favor la posicion y " + selectedChessman.pieceGraspedY);
-                    //Debug.Log(selectedChessman.grasped);
+                    nM.CommandSelectPawn(new Vector3(selectionX, selectionY, 1));
+                    //int tempx = (int)nM.secPawn.x;
+                    //int tempy = (int)nM.secPawn.y;
                 }
-                else
+                else if (selectedChessman != null)
                 {
-                    // Mueve la ficha
-                    MoveChessman((int)(selectionX * 10.0f), (int)(selectionY * 10.0f));
-                    //Debug.Log(selectedChessman.pieceGraspedX + "Por favor la posicion y " + selectedChessman.pieceGraspedY);
-
+                    nM.CommandMovePawn(new Vector3(selectionX, selectionY, 1));
                 }
             }
-        }*/
-    }
-
-    // Aqui se vera los movimientos para la fichas aqui podemos sacar o modificar para el ongrasp event
-
-    private void SelectChessman(int x, int y)
-    {
-        if (Chessmans[x, y] == null)
-        {
-            return;
         }
-        if (Chessmans[x, y].isWhite != isWhiteTurn)
-        {
-            return;
-        }
-        //bool[,] temp;
-
-        allowedMoves = Chessmans[x, y].PossibleMove();
-        selectedChessman = Chessmans[x, y];
-        BoardHighlights.Instance.HighlightAllowedMoves(allowedMoves);
-
-    }
-
-
-    private void MoveChessman(float x, float y)
-    {
-        if (allowedMoves[(int)x, (int)y])
-        {
-            int tempx = (int)(selectedChessman.CurrentX * 10.0f);
-            int tempy = (int)(selectedChessman.CurrentY * 10.0f);
-            Chessmans[tempx, tempy] = null;
-            selectedChessman.transform.position = GetTileCenter(x / 10.0f, y / 10.0f);
-            selectedChessman.SetPosition(x, y);
-            //Debug.Log((int)(x * 10.0f));
-            //Debug.Log((int)(y * 10.0f));
-            Chessmans[(int)x, (int)y] = selectedChessman;
-            isWhiteTurn = !isWhiteTurn;
-        }
-        BoardHighlights.Instance.Hidehighlights();
-        selectedChessman = null;
-    }
-
-    private void UpdateSelection()
-    {
-        if (!Camera.main)
-        {
-            return;
-        }
-        RaycastHit hit;
-        if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hit, 2.5f, LayerMask.GetMask("ChessPlane")))
-        {
-            //Debug.Log(hit.point);
-            selectionX = (float)Math.Round(hit.point.x, 1);
-            selectionY = (float)Math.Round(hit.point.z, 1);
-            if (selectionY > hit.point.z && selectionX > hit.point.x)
-            {
-                selectionX = selectionX - 0.1f;
-                selectionY = selectionY - 0.1f;
-                // Debug.Log(selectionX);
-            }
-            if (selectionY < hit.point.z && selectionX > hit.point.x)
-            {
-                selectionX = selectionX - 0.1f;
-                // Debug.Log(selectionX);
-            }
-            if (selectionY > hit.point.z && selectionX < hit.point.x)
-            {
-                selectionY = selectionY - 0.1f;
-                // Debug.Log(selectionY);
-            }
-            /*(if (selectionY < hit.point.z && selectionX < hit.point.x)
-            {
-                selectionX = selectionX - 0.1f;
-                selectionY = selectionY - 0.1f;
-            }*/
-            //Debug.Log(Math.Round(hit.point.x, 1));
-            //Debug.Log(hit.point);
-        }
-        else
-        {
-            selectionX = -1.0f;
-            selectionY = -1.0f;
-        }
-
-
     }
 
     private void UpdateHand(List<Hand> a)
     {
-        //controller = new Controller();
-        //Frame frame = controller.Frame();
-        //List<Hand> hands = frame.Hands;
-        //if (!Camera.main)
-        //{
-        //    return;
-        //}
         RaycastHit hit;
         Vector3 temp = a[0].PalmPosition.ToVector3();
         mano = GameObject.Find("Interaction Hand (Right)/Palm Transform");
-        piecePositionWithoutX = (float)Math.Round(mano.transform.position.x, 1);
-        piecePositionWithoutY = (float)Math.Round(mano.transform.position.z, 1);
-        //Debug.Log("Posicion x" + piecePositionWithoutX + " " + "posicion Y" + piecePositionWithoutY);
+        piecePositionWithoutX = (int)(mano.transform.position.x);
+        piecePositionWithoutY = (int)(mano.transform.position.z);
+        
 
         //Este es el ray cast que puedo descomentar por si se necesita
         /*if(Physics.Raycast(mano.transform.position, a[0].PalmNormal.ToVector3() , out hit, 2.5f, LayerMask.GetMask("ChessPlane")))
@@ -264,202 +161,290 @@ public class BoardManager : MonoBehaviour
         RaycastHit hit;
         //Vector3 temp = hands[1].PalmPosition.ToVector3();
         manoLeft = GameObject.Find("Interaction Hand (Left)/Palm Transform");
-        if (a[1].IsLeft)
-            Debug.Log("si es la isquiera");
-        
+        //if (a[1].IsLeft)
+            //Debug.Log("si es la isquiera");
+        Debug.DrawLine(manoLeft.transform.position, a[1].PalmNormal.ToVector3(), Color.black);
         if (Physics.Raycast(manoLeft.transform.position, a[1].PalmNormal.ToVector3(), out hit, 2.5f, LayerMask.GetMask("ChessPlane")))
         {
             Debug.Log(hit.point);
-            pieceLeftPositionX = (float)Math.Round(hit.point.x, 1);
-            pieceLeftPositionY = (float)Math.Round(hit.point.z, 1);
-            if (pieceLeftPositionY > hit.point.z && piecePositionX > hit.point.x)
-            {
-                pieceLeftPositionX = pieceLeftPositionX - 0.1f;
-                pieceLeftPositionY = pieceLeftPositionY - 0.1f;
-            }
-            if (pieceLeftPositionY < hit.point.z && pieceLeftPositionX > hit.point.x)
-            {
-                pieceLeftPositionX = pieceLeftPositionX - 0.1f;
-            }
-            if (pieceLeftPositionY > hit.point.z && pieceLeftPositionX < hit.point.x)
-            {
-                pieceLeftPositionY = pieceLeftPositionY - 0.1f;
-            }
-            else
-            {
-                pieceLeftPositionX = -1.0f;
-                pieceLeftPositionY = -1.0f;
-            }
-
+            pieceLeftPositionX = (int)(hit.point.x);
+            pieceLeftPositionY = (int)(hit.point.z);
+            Debug.DrawLine(
+                Vector3.forward * pieceLeftPositionY + Vector3.right * pieceLeftPositionX,
+                Vector3.forward * (pieceLeftPositionY + 1) + Vector3.right * (pieceLeftPositionX + 1), Color.red);
+            Debug.DrawLine(
+                Vector3.forward * (pieceLeftPositionY + 1) + Vector3.right * pieceLeftPositionX,
+                Vector3.forward * pieceLeftPositionY + Vector3.right * (pieceLeftPositionX + 1), Color.red);
+        }
+        else
+        {
+            pieceLeftPositionX = -1.0f;
+            pieceLeftPositionY = -1.0f;
         }
         //Debug.Log(pieceLeftPositionX + "La posicion y" + pieceLeftPositionY);
     }
 
-   
-
-    private void SpawnChessman(int index, float x2, float y2)
+    private void SelectChessman(int x, int y)
     {
-        GameObject go = Instantiate(chessmanPrefabs[index], GetTileCenter(x2, y2), Quaternion.identity) as GameObject;
+        if(Chessmans[x, y] == null)
+        {
+            return;
+        }
+        if(Chessmans[x, y].isWhite != isWhiteTurn)
+        {
+            return;
+        }
+        bool hasAtleastOneMove = false;
+
+        allowedMoves = Chessmans[x, y].PossibleMove();
+
+        for(int i = 0; i < 8; i++)
+        {
+            for(int j = 0; j < 8; j++)
+            {
+                if (allowedMoves[i, j])
+                    hasAtleastOneMove = true;   
+            }
+        }
+
+        selectedChessman = Chessmans[x, y];
+        previousMat = selectedChessman.GetComponent<MeshRenderer>().material;
+        selectedMat.mainTexture = previousMat.mainTexture;
+        selectedChessman.GetComponent<MeshRenderer>().material = selectedMat;
+        BoardHighlights.Instance.HighlightAllowedMoves(allowedMoves);
+    }
+
+    private void MoveChessman(int x, int y)
+    {
+        if(allowedMoves[x,y])
+        {
+            ChessMan c = Chessmans[x, y];
+
+            if(c != null)
+            {
+                // Comer una pieza
+
+                // Si es el rey
+                if (c.GetType() == typeof(King))
+                {
+                    // Fin de juego y retornar
+                    EndGame();
+                    return;
+                }
+
+                activeChessman.Remove(c.gameObject);
+                Destroy(c.gameObject);
+            }
+
+            if (x == EnPassantMove[0] && y == EnPassantMove[1])
+            {
+                if (isWhiteTurn)
+                {
+                    c = Chessmans[x, y - 1];
+                }
+                else
+                {
+                    c = Chessmans[x, y + 1];
+                }
+                activeChessman.Remove(c.gameObject);
+                Destroy(c.gameObject);
+
+            }
+            EnPassantMove[0] = -1;
+            EnPassantMove[1] = -1;
+            if(selectedChessman.GetType() == typeof(Pawn))
+            {
+                if ( y == 7 )
+                {
+                    activeChessman.Remove(selectedChessman.gameObject);
+                    Destroy(selectedChessman.gameObject);
+                    SpawnChessman(1, x, y);
+                    selectedChessman = Chessmans[x, y];
+                    
+                }
+                else if (y == 0)
+                {
+                    activeChessman.Remove(selectedChessman.gameObject);
+                    Destroy(selectedChessman.gameObject);
+                    SpawnChessman(7, x, y);
+                    selectedChessman = Chessmans[x, y];
+                }
+                if (selectedChessman.CurretnY == 1 && y == 3)
+                {
+                    EnPassantMove[0] = x;
+                    EnPassantMove[1] = y - 1;
+                }
+                else if(selectedChessman.CurretnY == 6 && y == 4)
+                {
+                    EnPassantMove[0] = x;
+                    EnPassantMove[1] = y + 1;
+                }
+            }
+
+            Chessmans[selectedChessman.CurrentX, selectedChessman.CurretnY] = null;
+            selectedChessman.transform.position = GetTileCenter(x, y);
+            selectedChessman.SetPosition(x, y);
+            Chessmans[x, y] = selectedChessman;
+            isWhiteTurn = !isWhiteTurn;
+
+        }
+
+        selectedChessman.GetComponent<MeshRenderer>().material = previousMat;
+        BoardHighlights.Instance.Hidehighlights(); 
+        selectedChessman = null;
+    }
+
+    private void UpdateSelection()
+    {
+        if (!Camera.main)
+        {
+            return;
+        }
+        RaycastHit hit;
+        if(Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hit, 25.0f, LayerMask.GetMask("ChessPlane")))
+        {
+            selectionX = (int)hit.point.x;
+            selectionY = (int)hit.point.z;
+            //Debug.Log(hit.point);
+        }
+        else
+        {
+            selectionX = -1;
+            selectionY = -1;
+        }
+    }
+
+    private void SpawnChessman(int index, int x, int y)
+    {
+        GameObject go = Instantiate(chessmanPrefabs[index], GetTileCenter(x,y), orientation) as GameObject;
         go.transform.SetParent(transform);
-        Chessmans[(int)(x2 * 10.0f), (int)(y2 * 10.0f)] = go.GetComponent<Chessman>();
-        Chessmans[(int)(x2 * 10.0f), (int)(y2 * 10.0f)].SetPosition(x2, y2);
-        //Debug.Log((int)(x2 * 10.0f));
-        //Debug.Log((int)(y2 * 10.0f));
+        Chessmans[x, y] = go.GetComponent<ChessMan>();
+        Chessmans[x, y].SetPosition(x, y);
         activeChessman.Add(go);
     }
 
-    public Vector3 GetTileCenter(float x, float y)
+    private void SpawnChessmanWhites(int index, int x, int y)
     {
-        Vector3 origin = Vector3.zero;
-        origin.x += (TILE_SIZE * x) + TILE_OFFSET;
-        origin.z += (TILE_SIZE * y) + TILE_OFFSET;
-        return origin;
+        GameObject go = Instantiate(chessmanPrefabs[index], GetTileCenter(x,y), Quaternion.identity) as GameObject;
+        go.transform.SetParent(transform);
+        Chessmans[x, y] = go.GetComponent<ChessMan>();
+        Chessmans[x, y].SetPosition(x, y);
+        activeChessman.Add(go);
     }
 
     private void SpawnAllChessmans()
     {
         activeChessman = new List<GameObject>();
-        Chessmans = new Chessman[8, 8];
-        // Dibujar las blancas
-        // Rey
-        SpawnChessman(0, 0.4f, 0.0f);
+        Chessmans = new ChessMan[8,8];
+        EnPassantMove = new int[2] { -1, -1 };
 
-        //Reina
-        SpawnChessman(1, 0.3f, 0.0f);
+        // Primero las blancas
+        // Rey Blanco
+        SpawnChessman(0, 4, 0);
 
-        //Torres
-        SpawnChessman(2, 0.4f, 0.3f);
-        SpawnChessman(2, 0.7f, 0.0f);
+        // Reina Blanca
+        SpawnChessman(1, 3, 0);
 
-        // Alfiles
-        SpawnChessman(3, 0.2f, 0.0f);
-        SpawnChessman(3, 0.5f, 0.0f);
+        // Torres blancas
+        SpawnChessman(2, 0, 0);
+        SpawnChessman(2, 7, 0);
 
-        //Caballos
-        SpawnChessman(4, 0.1f, 0.0f);
-        SpawnChessman(4, 0.6f, 0.0f);
+        // Alfiles Blancos
+        SpawnChessmanWhites(3, 2, 0);
+        SpawnChessmanWhites(3, 5, 0);
 
-        //Peones
-        for (float i = 0.0f; i < 0.8f; i = i + 0.1f)
+        // Caballos Blancos
+        SpawnChessmanWhites(4, 1, 0);
+        SpawnChessmanWhites(4, 6, 0);
+
+        // Peones Blancos
+        for(int i = 0; i < 8; i++)
         {
-            SpawnChessman(5, i, 0.1f);
-
+            SpawnChessman(5, i, 1);
         }
 
-        // Dibujar las negras
-        // Rey
-        SpawnChessman(6, 0.4f, 0.7f);
+        // Segundo las negras
+        // Rey Negro
+        SpawnChessman(6, 4, 7);
 
-        //Reina
-        SpawnChessman(7, 0.3f, 0.7f);
+        // Reina Negra
+        SpawnChessman(7, 3, 7);
 
-        //Torres
-        SpawnChessman(8, 0.0f, 0.7f);
-        SpawnChessman(8, 0.7f, 0.7f);
+        // Torres Negras
+        SpawnChessman(8, 0, 7);
+        SpawnChessman(8, 7, 7);
 
-        // Alfiles
-        SpawnChessman(9, 0.2f, 0.7f);
-        SpawnChessman(9, 0.5f, 0.7f);
+        // Alfiles Negros
+        SpawnChessman(9, 2, 7);
+        SpawnChessman(9, 5, 7);
 
-        //Caballos
-        SpawnChessman(10, 0.1f, 0.7f);
-        SpawnChessman(10, 0.6f, 0.7f);
+        // Caballos Negros
+        SpawnChessman(10, 1, 7);
+        SpawnChessman(10, 6, 7);
 
-        //Peones
-        for (float i = 0.0f; i < 0.8f; i = i + 0.1f)
+        // Peones Negros
+        for (int i = 0; i < 8; i++)
         {
-            SpawnChessman(11, i, 0.6f);
-
+            SpawnChessman(11, i, 6);
         }
-
-
 
     }
 
-    private void DrawChessboard()
+    private Vector3 GetTileCenter(int x, int y)
     {
-        Vector3 widthLine = Vector3.right * 0.8f;
-        Vector3 heigthLine = Vector3.forward * 0.8f;
-        for (float i = 0.0f; i <= 0.9f; i = i + 0.1f)
+        Vector3 origin = Vector3.zero;
+        origin.x += (TILE_SIZE * x) + TILE_OFFSET;
+        origin.z += (TILE_SIZE * y) + TILE_OFFSET;
+        return origin;
+
+    }
+
+    private void DrawChessBoard()
+    {
+        Vector3 widthLine = Vector3.right * 8;
+        Vector3 heigthLine = Vector3.forward * 8;
+
+        for(int i = 0; i <= 8; i++)
         {
             Vector3 start = Vector3.forward * i;
             Debug.DrawLine(start, start + widthLine);
-            for (float j = 0.0f; j <= 0.9f; j = j + 0.1f)
+            for(int j = 0; j <= 8; j++)
             {
-                start = Vector3.right * j;
+                start = Vector3.right * i;
                 Debug.DrawLine(start, start + heigthLine);
-                // Debug.Log(j);
             }
         }
 
-        // Dibujar la seleccion
-        if (selectionX >= 0 && selectionY >= 0)
+        if(selectionX >= 0 && selectionY >= 0)
         {
             Debug.DrawLine(
-                Vector3.forward * selectionY + Vector3.right * selectionX,
-                Vector3.forward * (selectionY + 0.1f) + Vector3.right * (selectionX + 0.1f)
-                );
-            Debug.DrawLine(
-                Vector3.forward * (selectionY + 0.1f) + Vector3.right * selectionX,
-                Vector3.forward * selectionY + Vector3.right * (selectionX + 0.1f)
-                );
-        }
-        //Dibujar la seleccion con la mano
-        if (piecePositionX >= 0 && piecePositionY >= 0)
-        {
-            Debug.DrawLine(
-                Vector3.forward * piecePositionY + Vector3.right * piecePositionX,
-                Vector3.forward * (piecePositionY + 0.1f) + Vector3.right * (piecePositionX + 0.1f), Color.red
-                );
-            Debug.DrawLine(
-                Vector3.forward * (piecePositionY + 0.1f) + Vector3.right * piecePositionX,
-                Vector3.forward * piecePositionY + Vector3.right * (piecePositionX + 0.1f), Color.red
-                );
-        }
+            Vector3.forward * selectionY + Vector3.right * selectionX,
+            Vector3.forward * (selectionY + 1) + Vector3.right * (selectionX + 1));
 
-        //Dibujar el lugar de movimiento
-        if (pieceLeftPositionX >= 0 && pieceLeftPositionY >= 0)
-        {
             Debug.DrawLine(
-                Vector3.forward * pieceLeftPositionY + Vector3.right * pieceLeftPositionX,
-                Vector3.forward * (pieceLeftPositionY + 0.1f) + Vector3.right * (pieceLeftPositionX + 0.1f), Color.green
-                );
-            Debug.DrawLine(
-                Vector3.forward * (pieceLeftPositionY + 0.1f) + Vector3.right * pieceLeftPositionX,
-                Vector3.forward * pieceLeftPositionY + Vector3.right * (pieceLeftPositionX + 0.1f), Color.green
-                );
-        }
-
-        //Dibujar la seleccion de la mano sin raycast
-        if (piecePositionWithoutX >= 0 && piecePositionWithoutY >= 0)
-        {
-            Debug.DrawLine(
-                Vector3.forward * piecePositionWithoutY + Vector3.right * piecePositionWithoutX,
-                Vector3.forward * (piecePositionWithoutY + 0.1f) + Vector3.right * (piecePositionWithoutX + 0.1f), Color.blue
-                );
-            Debug.DrawLine(
-                Vector3.forward * (piecePositionWithoutY + 0.1f) + Vector3.right * piecePositionWithoutX,
-                Vector3.forward * piecePositionWithoutY + Vector3.right * (piecePositionWithoutX + 0.1f), Color.blue
-                );
+            Vector3.forward * (selectionY+1) + Vector3.right * selectionX,
+            Vector3.forward * selectionY + Vector3.right * (selectionX + 1));
         }
     }
 
-    /*public void PiecePosition()
+    private void EndGame()
     {
-        piecePositionX = this.transform.position.x;
-        piecePositionY = this.transform.position.z;
-        grasped = true;
-        Debug.Log((int)(piecePositionX * 10.0f) + " " + (int)(piecePositionY * 10.0f));
-        selectedChessman = Chessmans[(int)(piecePositionX*10.0f), (int)(piecePositionY*10.0f)];
-        Debug.Log(selectedChessman);
-    }*/
+        if (isWhiteTurn)
+        {
+            Debug.Log("White team wins");
+        }
+        else
+        {
+            Debug.Log("Black team wins");
+        }
+        foreach(GameObject go in activeChessman)
+        {
+            Destroy(go);
+        }
+        isWhiteTurn = true;
+        BoardHighlights.Instance.Hidehighlights();
+        SpawnAllChessmans();
+    }
 
-    /*public void PieceDeGrasp()
-    {
-        piecePositionX = -1;
-        piecePositionY = -1;
-        grasped = false;
-    }*/
-      
 
 }
