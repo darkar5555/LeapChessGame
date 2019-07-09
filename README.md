@@ -34,6 +34,6 @@ Una ves seguido estos pasos no deberia de haber ningun problema en jugar. Tengo 
 
 Este es el video: https://www.youtube.com/watch?v=I1Pnqy4yPYI
 
-[![LeapChess](https://img.youtube.com/vi/I1Pnqy4yPYIs/0.jpg)](https://www.youtube.com/watch?v=I1Pnqy4yPYI)
+[![LeapChess](https://img.youtube.com/vi/I1Pnqy4yPYI/0.jpg)](https://www.youtube.com/watch?v=I1Pnqy4yPYI)
     
 
